@@ -1,1511 +1,705 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>CPU-Constrained Deep Learning | Obidur Rahman</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU-Constrained Deep Learning | Obidur Rahman</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
 
-        <!-- Tailwind CSS -->
-        <script src="https://cdn.tailwindcss.com"></script>
-
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap"
-            rel="stylesheet"
-        />
-
-        <!-- Tailwind Config -->
-        <script>
-            tailwind.config = {
-                darkMode: "class",
-                theme: {
-                    extend: {
-                        fontFamily: {
-                            sans: ["Inter", "sans-serif"],
-                            serif: ["Merriweather", "serif"],
-                            mono: ["JetBrains Mono", "monospace"],
-                        },
-                        colors: {
-                            tomato: {
-                                500: "#f43f5e",
-                                600: "#e11d48",
-                                900: "#881337",
-                            },
-                        },
-                        animation: {
-                            "fade-in": "fadeIn 0.6s ease-out forwards",
-                        },
-                        keyframes: {
-                            fadeIn: {
-                                "0%": {
-                                    opacity: "0",
-                                    transform: "translateY(15px)",
-                                },
-                                "100%": {
-                                    opacity: "1",
-                                    transform: "translateY(0)",
-                                },
-                            },
-                        },
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
-                },
-            };
-        </script>
+                    colors: {
+                        tomato: {
+                            500: '#f43f5e', 
+                            600: '#e11d48',
+                            900: '#881337',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(15px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-        <style>
-            /* Custom Scrollbar */
-            ::-webkit-scrollbar {
-                width: 8px;
-                height: 8px;
-            }
-            ::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            ::-webkit-scrollbar-thumb {
-                background: #d4d4d8;
-            }
-            .dark ::-webkit-scrollbar-thumb {
-                background: #27272a;
-            }
-            ::-webkit-scrollbar-thumb:hover {
-                background: #a1a1aa;
-            }
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; }
+        .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+        
+        /* Selection */
+        ::selection { background-color: #f43f5e; color: white; }
 
-            /* Selection */
-            ::selection {
-                background-color: #f43f5e;
-                color: white;
-            }
+        /* Animation Classes */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-            /* Animation Classes */
-            .reveal-on-scroll {
-                opacity: 0;
-                transform: translateY(20px);
-                transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            }
-            .reveal-on-scroll.is-visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Hover Effect */
+        .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 4px 4px 0px 0px rgba(244, 63, 94, 0.2);
+        }
+        .dark .hover-lift:hover {
+            box-shadow: 4px 4px 0px 0px rgba(244, 63, 94, 0.5);
+        }
 
-            /* Hover Effect */
-            .hover-lift {
-                transition:
-                    transform 0.2s ease,
-                    box-shadow 0.2s ease;
-            }
-            .hover-lift:hover {
-                transform: translateY(-4px);
-                box-shadow: 4px 4px 0px 0px rgba(244, 63, 94, 0.2);
-            }
-            .dark .hover-lift:hover {
-                box-shadow: 4px 4px 0px 0px rgba(244, 63, 94, 0.5);
-            }
+        /* Details/Summary Animation */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] summary ~ * { animation: fadeIn 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-300">
 
-            /* Details/Summary Animation */
-            details > summary {
-                list-style: none;
-            }
-            details > summary::-webkit-details-marker {
-                display: none;
-            }
-            details[open] summary ~ * {
-                animation: fadeIn 0.3s ease-in-out;
-            }
-        </style>
-    </head>
-    <body
-        class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased font-sans transition-colors duration-300"
-    >
-        <!-- Reading Progress Bar -->
-        <div
-            class="fixed top-0 left-0 w-full h-1 z-[70] bg-zinc-100 dark:bg-zinc-900"
-        >
-            <div
-                id="progress-bar"
-                class="h-full bg-tomato-600 w-0 transition-all duration-100 ease-out"
-            ></div>
-        </div>
+    <!-- Reading Progress Bar -->
+    <div class="fixed top-0 left-0 w-full h-1 z-[70] bg-zinc-100 dark:bg-zinc-900">
+        <div id="progress-bar" class="h-full bg-tomato-600 w-0 transition-all duration-100 ease-out"></div>
+    </div>
 
-        <!-- Theme Toggle -->
-        <button
-            id="theme-toggle"
-            class="fixed top-6 right-6 z-[60] p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:border-tomato-500 transition-colors group"
-        >
-            <svg
-                id="sun-icon"
-                class="w-5 h-5 hidden dark:block text-zinc-400 group-hover:text-tomato-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path
-                    stroke-linecap="square"
-                    stroke-linejoin="miter"
-                    stroke-width="2"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                ></path>
-            </svg>
-            <svg
-                id="moon-icon"
-                class="w-5 h-5 block dark:hidden text-zinc-600 group-hover:text-tomato-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path
-                    stroke-linecap="square"
-                    stroke-linejoin="miter"
-                    stroke-width="2"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                ></path>
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" class="fixed top-6 right-6 z-[60] p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:border-tomato-500 transition-colors group">
+        <svg id="sun-icon" class="w-5 h-5 hidden dark:block text-zinc-400 group-hover:text-tomato-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <svg id="moon-icon" class="w-5 h-5 block dark:hidden text-zinc-600 group-hover:text-tomato-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+
+    <!-- Mobile Menu Toggle -->
+    <div class="lg:hidden fixed bottom-6 right-6 z-50">
+        <button id="menu-btn" class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 p-4 shadow-xl border border-zinc-900 active:scale-95 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
         </button>
+    </div>
 
-        <!-- Mobile Menu Toggle -->
-        <div class="lg:hidden fixed bottom-6 right-6 z-50">
-            <button
-                id="menu-btn"
-                class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 p-4 shadow-xl border border-zinc-900 active:scale-95 transition-transform"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="square"
-                        stroke-linejoin="miter"
-                        stroke-width="2"
-                        d="M4 6h16M4 12h16m-7 6h7"
-                    />
-                </svg>
-            </button>
-        </div>
-
-        <div
-            class="max-w-[1440px] mx-auto flex flex-col lg:flex-row border-x border-zinc-100 dark:border-zinc-900 min-h-screen"
-        >
-            <!-- Sidebar -->
-            <aside
-                id="sidebar"
-                class="hidden lg:flex flex-col justify-between w-full lg:w-72 fixed lg:sticky top-0 h-screen overflow-y-auto bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-r border-zinc-200 dark:border-zinc-800 z-40 transition-transform duration-300 p-8 lg:py-12"
-            >
-                <div>
-                    <div class="mb-10">
-                        <div class="h-1.5 w-10 bg-tomato-600 mb-4"></div>
-                        <h2
-                            class="text-sm font-bold font-mono text-zinc-900 dark:text-white uppercase tracking-wider leading-relaxed"
-                        >
-                            Tomato Disease<br />Detection
-                        </h2>
-                    </div>
-
-                    <nav class="space-y-1 font-mono text-sm">
-                        <a
-                            href="#header"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >Overview</a
-                        >
-                        <a
-                            href="#problem"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >1. Problem & Gap</a
-                        >
-                        <a
-                            href="#methodology"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >2. Methodology</a
-                        >
-                        <a
-                            href="#dataset"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >3. Dataset</a
-                        >
-                        <a
-                            href="#results"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >4. Results</a
-                        >
-                        <a
-                            href="#errors"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >5. Error Analysis</a
-                        >
-                        <a
-                            href="#impact"
-                            class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
-                            >6. Impact & Future</a
-                        >
-                    </nav>
+    <div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row border-x border-zinc-100 dark:border-zinc-900 min-h-screen">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="hidden lg:flex flex-col justify-between w-full lg:w-72 fixed lg:sticky top-0 h-screen overflow-y-auto bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-r border-zinc-200 dark:border-zinc-800 z-40 transition-transform duration-300 p-8 lg:py-12">
+            <div>
+                <div class="mb-10">
+                    <div class="h-1.5 w-10 bg-tomato-600 mb-4"></div>
+                    <h2 class="text-sm font-bold font-mono text-zinc-900 dark:text-white uppercase tracking-wider leading-relaxed">Tomato Disease<br>Detection</h2>
                 </div>
+                
+                <nav class="space-y-1 font-mono text-sm">
+                    <a href="#header" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">Overview</a>
+                    <a href="#problem" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">1. Problem & Gap</a>
+                    <a href="#methodology" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">2. Methodology</a>
+                    <a href="#dataset" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">3. Dataset</a>
+                    <a href="#results" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">4. Results</a>
+                    <a href="#errors" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">5. Error Analysis</a>
+                    <a href="#impact" class="nav-link block py-2 px-3 border-l-2 border-transparent text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">6. Impact & Future</a>
+                </nav>
+            </div>
 
-                <div
-                    class="mt-12 pt-6 border-t border-zinc-200 dark:border-zinc-800"
-                >
-                    <p
-                        class="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-600 mb-1"
-                    >
-                        Developed By
-                    </p>
-                    <a
-                        href="#"
-                        class="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-300 hover:text-tomato-600 dark:hover:text-tomato-500 transition-colors"
-                    >
-                        Obidur Rahman
-                    </a>
-                </div>
-            </aside>
+            <div class="mt-12 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                <p class="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-600 mb-1">Developed By</p>
+                <a href="https://github.com/ashfinnn/efficient-leaf-disease" target="_blank" class="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-300 hover:text-tomato-600 dark:hover:text-tomato-500 transition-colors flex items-center gap-2">
+                    Obidur Rahman
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                </a>
+            </div>
+        </aside>
 
-            <!-- Main Content -->
-            <main
-                class="flex-1 min-w-0 py-12 px-6 lg:px-24 lg:py-20 bg-white dark:bg-zinc-950"
-            >
-                <!-- Header -->
-                <header id="header" class="mb-24 reveal-on-scroll max-w-4xl">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 mb-8 text-xs font-mono font-bold tracking-widest text-tomato-600 dark:text-tomato-400 uppercase border border-tomato-600 dark:border-tomato-800 bg-tomato-50 dark:bg-tomato-900/20"
-                    >
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 py-12 px-6 lg:px-24 lg:py-20 bg-white dark:bg-zinc-950">
+            
+            <!-- Header -->
+            <header id="header" class="mb-24 reveal-on-scroll max-w-4xl">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 text-xs font-mono font-bold tracking-widest text-tomato-600 dark:text-tomato-400 uppercase border border-tomato-600 dark:border-tomato-800 bg-tomato-50 dark:bg-tomato-900/20 w-fit">
                         <span class="relative flex h-2 w-2">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tomato-400 opacity-75"
-                            ></span>
-                            <span
-                                class="relative inline-flex rounded-full h-2 w-2 bg-tomato-500"
-                            ></span>
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tomato-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-tomato-500"></span>
                         </span>
                         2025 Research Paper
                     </div>
 
-                    <h1
-                        class="text-4xl lg:text-6xl font-bold font-serif text-zinc-900 dark:text-zinc-100 leading-[1.1] mb-8"
-                    >
-                        CPU-Constrained Deep Learning for Tomato Disease
-                        Detection
-                    </h1>
+                    <!-- GITHUB LINK IN HEADER -->
+                    <a href="https://github.com/ashfinnn/efficient-leaf-disease" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 text-xs font-mono font-bold uppercase tracking-widest border border-zinc-200 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-100 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-all w-fit group">
+                        <svg class="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                        View Code on GitHub
+                    </a>
+                </div>
+                
+                <h1 class="text-4xl lg:text-6xl font-bold font-serif text-zinc-900 dark:text-zinc-100 leading-[1.1] mb-8">
+                    CPU-Constrained Deep Learning for Tomato Disease Detection
+                </h1>
+                
+                <p class="text-xl text-zinc-500 dark:text-zinc-400 font-light mb-10 border-l-2 border-zinc-200 dark:border-zinc-800 pl-6 py-1 leading-relaxed">
+                    Benchmarking Traditional (ResNet-50), Modern (ConvNeXt-Tiny), and Hybrid (FastViT-T8) architectures on accessible consumer hardware.
+                </p>
+                
+                <!-- Authors -->
+                <div class="flex flex-wrap gap-3 font-mono text-xs">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border border-zinc-900 shadow-md transform hover:-translate-y-1 transition-transform duration-300 cursor-default">
+                        <span class="font-bold">Obidur Rahman</span>
+                    </div>
+                    <span class="author-tag">Lipon Chandra Das</span>
+                    <span class="author-tag">Arnab Aich</span>
+                    <span class="author-tag">Abu Saiman Md Taiham</span>
+                    <span class="author-tag">Atif Ibna Latif</span>
+                </div>
+            </header>
 
-                    <p
-                        class="text-xl text-zinc-500 dark:text-zinc-400 font-light mb-10 border-l-2 border-zinc-200 dark:border-zinc-800 pl-6 py-1 leading-relaxed"
-                    >
-                        Benchmarking Traditional (ResNet-50), Modern
-                        (ConvNeXt-Tiny), and Hybrid (FastViT-T8) architectures
-                        on accessible consumer hardware.
+            <!-- Abstract -->
+            <section id="abstract" class="reveal-on-scroll mb-20">
+                <div class="relative bg-zinc-50 dark:bg-zinc-900/40 p-8 lg:p-12 border-l-[6px] border-tomato-500">
+                    <div class="absolute -top-3 left-6 bg-white dark:bg-zinc-950 px-2 text-sm font-bold font-mono text-tomato-600 uppercase tracking-widest">
+                        Abstract
+                    </div>
+                    <p class="text-zinc-800 dark:text-zinc-300 leading-relaxed text-lg font-serif">
+                        Tomato cultivation is threatened by yield losses up to 40% due to foliar diseases. While deep learning shows promise, most existing solutions require GPUs unavailable in developing regions. This study evaluates <strong>ResNet-50</strong>, <strong>ConvNeXt-Tiny</strong>, and <strong>FastViT-T8</strong> under CPU-constrained conditions using the PlantVillage dataset (16,012 images). Results identify <strong class="text-tomato-600">FastViT-T8</strong> as the optimal solution (99.66% accuracy, 0.022s inference time), bridging the technological disconnect for resource-poor farmers.
                     </p>
+                </div>
+            </section>
 
-                    <!-- Authors -->
-                    <div class="flex flex-wrap gap-3 font-mono text-xs">
-                        <div
-                            class="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border border-zinc-900 shadow-md transform hover:-translate-y-1 transition-transform duration-300 cursor-default"
-                        >
-                            <span class="font-bold">Obidur Rahman</span>
-                        </div>
-                        <span class="author-tag">Lipon Chandra Das</span>
-                        <span class="author-tag">Arnab Aich</span>
-                        <span class="author-tag">Abu Saiman Md Taiham</span>
-                        <span class="author-tag">Atif Ibna Latif</span>
-                    </div>
-                </header>
+            <!-- 1. Agricultural Context & Research Gap -->
+            <section id="problem" class="reveal-on-scroll space-y-12 mb-24">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">01</span> 
+                    Context & Research Gap
+                </h2>
 
-                <!-- Abstract -->
-                <section id="abstract" class="reveal-on-scroll mb-20">
-                    <div
-                        class="relative bg-zinc-50 dark:bg-zinc-900/40 p-8 lg:p-12 border-l-[6px] border-tomato-500"
-                    >
-                        <div
-                            class="absolute -top-3 left-6 bg-white dark:bg-zinc-950 px-2 text-sm font-bold font-mono text-tomato-600 uppercase tracking-widest"
-                        >
-                            Abstract
-                        </div>
-                        <p
-                            class="text-zinc-800 dark:text-zinc-300 leading-relaxed text-lg font-serif"
-                        >
-                            Tomato cultivation is threatened by yield losses up
-                            to 40% due to foliar diseases. While deep learning
-                            shows promise, most existing solutions require GPUs
-                            unavailable in developing regions. This study
-                            evaluates <strong>ResNet-50</strong>,
-                            <strong>ConvNeXt-Tiny</strong>, and
-                            <strong>FastViT-T8</strong> under CPU-constrained
-                            conditions using the PlantVillage dataset (16,012
-                            images). Results identify
-                            <strong class="text-tomato-600">FastViT-T8</strong>
-                            as the optimal solution (99.66% accuracy, 0.022s
-                            inference time), bridging the technological
-                            disconnect for resource-poor farmers.
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-lg mb-4">Agricultural Impact</h3>
+                        <p class="text-zinc-600 dark:text-zinc-400 mb-4">
+                            Global tomato production exceeds <strong>180 million tons</strong> annually. However, foliar diseases like Bacterial Spot and Early Blight cause up to <strong>40% yield loss</strong>, threatening the livelihoods of smallholder farmers in South Asia and Africa.
+                        </p>
+                        <p class="text-zinc-600 dark:text-zinc-400">
+                            Current detection methods are either too slow (expert visual inspection) or too expensive (laboratory testing), creating a critical need for automated, accessible solutions.
                         </p>
                     </div>
-                </section>
+                    <div class="bg-zinc-100 dark:bg-zinc-900 p-6 border border-zinc-200 dark:border-zinc-800">
+                        <h3 class="font-mono font-bold text-xs uppercase text-zinc-400 mb-4">The "GPU Gap" in Prior Work</h3>
+                        <ul class="text-sm space-y-3 text-zinc-600 dark:text-zinc-300">
+                            <li><strong class="text-zinc-900 dark:text-white">DenseNet (2020):</strong> Used Tesla K80 GPU. No CPU benchmarks.</li>
+                            <li><strong class="text-zinc-900 dark:text-white">TomatoDet (2024):</strong> Used Tesla T4. Acknowledged need for lightweight models but didn't test them.</li>
+                            <li><strong class="text-zinc-900 dark:text-white">Inception V3 (2023):</strong> Relied on RTX 3060 Ti.</li>
+                        </ul>
+                        <div class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                            <p class="text-xs font-bold text-tomato-600">Our Contribution: First systematic evaluation on consumer CPU (AMD Ryzen 5).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                <!-- 1. Agricultural Context & Research Gap -->
-                <section id="problem" class="reveal-on-scroll space-y-12 mb-24">
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >01</span
-                        >
-                        Context & Research Gap
-                    </h2>
+            <!-- 2. Methodology & Hardware -->
+            <section id="methodology" class="reveal-on-scroll space-y-12 mb-24">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">02</span> 
+                    Methodology & Setup
+                </h2>
+
+                <!-- Hardware Specs -->
+                <div class="border border-zinc-200 dark:border-zinc-800 p-8 bg-zinc-50 dark:bg-zinc-900/50 hover-lift">
+                    <h3 class="font-mono font-bold text-lg mb-6 text-zinc-900 dark:text-white uppercase flex items-center gap-2">
+                        Experimental Hardware (CPU-Only)
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <ul class="font-mono text-sm space-y-4">
+                            <li class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                                <span class="text-zinc-500">Processor</span>
+                                <span class="font-bold">AMD Ryzen 5 5600G</span>
+                            </li>
+                            <li class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                                <span class="text-zinc-500">Cores/Threads</span>
+                                <span class="font-bold">6 Cores / 12 Threads</span>
+                            </li>
+                            <li class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                                <span class="text-zinc-500">RAM</span>
+                                <span class="font-bold">16 GB DDR4-3200</span>
+                            </li>
+                            <li class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                                <span class="text-zinc-500">Accelerator</span>
+                                <span class="font-bold text-tomato-600">None (No GPU)</span>
+                            </li>
+                        </ul>
+                        <div class="text-sm text-zinc-600 dark:text-zinc-400 italic flex items-center">
+                            "Most farmers in developing regions use standard computers or mobile devices. GPU workstations ($2,000+) are inaccessible. We test on a ~$500 setup to reflect reality."
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Architectures -->
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="border border-zinc-200 dark:border-zinc-800 p-6">
+                        <div class="text-xs font-mono text-zinc-400 mb-2">BASELINE</div>
+                        <h4 class="font-bold text-lg mb-2">ResNet-50</h4>
+                        <p class="text-sm text-zinc-500 mb-4">Traditional CNN</p>
+                        <ul class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400">
+                            <li>• Params: <strong>25.6 Million</strong></li>
+                            <li>• Deep residual layers</li>
+                            <li>• Identity shortcuts</li>
+                        </ul>
+                    </div>
+                    <div class="border border-zinc-200 dark:border-zinc-800 p-6 bg-zinc-50 dark:bg-zinc-900">
+                        <div class="text-xs font-mono text-zinc-400 mb-2">MODERN CNN</div>
+                        <h4 class="font-bold text-lg mb-2">ConvNeXt-Tiny</h4>
+                        <p class="text-sm text-zinc-500 mb-4">Modernized Architecture</p>
+                        <ul class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400">
+                            <li>• Params: <strong>29.0 Million</strong></li>
+                            <li>• Large kernels (7x7)</li>
+                            <li>• Transformer-like design</li>
+                        </ul>
+                    </div>
+                    <div class="border-2 border-tomato-500 p-6 relative">
+                        <div class="absolute top-0 right-0 bg-tomato-500 text-white text-[10px] px-2 py-1 font-bold">HYBRID</div>
+                        <h4 class="font-bold text-lg mb-2">FastViT-T8</h4>
+                        <p class="text-sm text-zinc-500 mb-4">CNN + Transformer</p>
+                        <ul class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400">
+                            <li>• Params: <strong class="text-tomato-600">4.03 Million</strong></li>
+                            <li>• Global attention</li>
+                            <li>• Optimized for speed</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Training Protocol -->
+                <div class="bg-zinc-50 dark:bg-zinc-900/30 p-8 border border-zinc-200 dark:border-zinc-800">
+                    <h3 class="font-bold mb-4">Two-Phase Transfer Learning Protocol</h3>
+                    <div class="grid md:grid-cols-2 gap-8 text-sm">
+                        <div>
+                            <h4 class="font-mono font-bold text-tomato-600 mb-2">Phase 1: Feature Adaptation</h4>
+                            <ul class="space-y-1 text-zinc-600 dark:text-zinc-400">
+                                <li>• <strong>Epochs:</strong> 0-4</li>
+                                <li>• <strong>Strategy:</strong> Frozen Backbone</li>
+                                <li>• <strong>LR:</strong> 1×10⁻⁴ (Cosine Annealing)</li>
+                                <li>• <strong>Goal:</strong> Adapt ImageNet features</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-mono font-bold text-tomato-600 mb-2">Phase 2: Full Fine-Tuning</h4>
+                            <ul class="space-y-1 text-zinc-600 dark:text-zinc-400">
+                                <li>• <strong>Epochs:</strong> 5-19 (Early Stopping)</li>
+                                <li>• <strong>Strategy:</strong> Unfreeze All Layers</li>
+                                <li>• <strong>LR:</strong> 5×10⁻⁵ (Reduced)</li>
+                                <li>• <strong>Optimizer:</strong> AdamW (Decay 1e-4)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Dataset Details -->
+            <section id="dataset" class="reveal-on-scroll space-y-12 mb-24">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">03</span> 
+                    Dataset Distribution
+                </h2>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                            <table class="w-full text-sm text-left font-mono">
+                                <thead class="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+                                    <tr>
+                                        <th class="px-4 py-3">Class Label</th>
+                                        <th class="px-4 py-3 text-right">Count</th>
+                                        <th class="px-4 py-3 text-right">%</th>
+                                        <th class="px-4 py-3 hidden sm:table-cell">Bar</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950">
+                                    <tr>
+                                        <td class="px-4 py-2 font-bold">Yellow Leaf Curl Virus</td>
+                                        <td class="px-4 py-2 text-right">3,209</td>
+                                        <td class="px-4 py-2 text-right">20.0%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-tomato-500 w-full"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Bacterial Spot</td>
+                                        <td class="px-4 py-2 text-right">2,127</td>
+                                        <td class="px-4 py-2 text-right">13.3%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[66%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Late Blight</td>
+                                        <td class="px-4 py-2 text-right">1,909</td>
+                                        <td class="px-4 py-2 text-right">11.9%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[59%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Septoria Leaf Spot</td>
+                                        <td class="px-4 py-2 text-right">1,771</td>
+                                        <td class="px-4 py-2 text-right">11.1%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[55%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Two-spotted Spider Mites</td>
+                                        <td class="px-4 py-2 text-right">1,676</td>
+                                        <td class="px-4 py-2 text-right">10.5%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[52%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Healthy</td>
+                                        <td class="px-4 py-2 text-right">1,591</td>
+                                        <td class="px-4 py-2 text-right">9.9%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[49%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Target Spot</td>
+                                        <td class="px-4 py-2 text-right">1,404</td>
+                                        <td class="px-4 py-2 text-right">8.8%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[43%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Early Blight</td>
+                                        <td class="px-4 py-2 text-right">1,000</td>
+                                        <td class="px-4 py-2 text-right">6.2%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[31%]"></div></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2">Leaf Mold</td>
+                                        <td class="px-4 py-2 text-right">952</td>
+                                        <td class="px-4 py-2 text-right">5.9%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-zinc-400 w-[29%]"></div></div></td>
+                                    </tr>
+                                    <tr class="bg-tomato-50 dark:bg-tomato-900/20 text-tomato-700 dark:text-tomato-400">
+                                        <td class="px-4 py-2 font-bold">Tomato Mosaic Virus</td>
+                                        <td class="px-4 py-2 text-right font-bold">373</td>
+                                        <td class="px-4 py-2 text-right">2.3%</td>
+                                        <td class="px-4 py-2 hidden sm:table-cell"><div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"><div class="h-full bg-tomato-500 w-[11%]"></div></div></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="p-6 bg-zinc-100 dark:bg-zinc-900 mb-6">
+                            <h4 class="font-bold mb-2">Imbalance Ratio: 8.6:1</h4>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                The dataset is heavily skewed. To combat this, we used <strong>Weighted Metrics</strong> (F1, Precision, Recall) and aggressive Data Augmentation (Random Resized Crop, Horizontal Flip).
+                            </p>
+                        </div>
+                        <div class="p-6 border border-zinc-200 dark:border-zinc-800">
+                            <h4 class="font-bold mb-2">Preprocessing</h4>
+                            <ul class="text-sm space-y-2 text-zinc-600 dark:text-zinc-400">
+                                <li>• <strong>Input:</strong> Resized to model dim.</li>
+                                <li>• <strong>Norm:</strong> ImageNet Mean/Std.</li>
+                                <li>• <strong>Validation:</strong> Fixed center crop.</li>
+                                <li>• <strong>Augmentation:</strong> Flip (50%), Random Crop.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Results -->
+            <section id="results" class="reveal-on-scroll space-y-12 mb-24">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">04</span> 
+                    Results & Benchmarks
+                </h2>
+
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <!-- Speed Chart -->
+                    <div>
+                        <h3 class="font-mono font-bold text-xs uppercase text-zinc-400 mb-6 tracking-widest">Inference Latency (Avg over 3,202 images)</h3>
+                        <div class="space-y-8">
+                            <!-- FastViT -->
+                            <div class="group">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="font-bold flex items-center gap-2">
+                                        FastViT-T8
+                                        <span class="bg-yellow-400 text-black text-[10px] px-1.5 py-0.5 font-bold uppercase">Fastest</span>
+                                    </span>
+                                    <span class="font-mono text-tomato-600 font-bold">0.022s</span>
+                                </div>
+                                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full bg-tomato-500 chart-bar transition-all duration-1000 ease-out" style="width: 40%"></div>
+                                </div>
+                                <p class="text-xs text-zinc-500 mt-2">Throughput: ~45 images/sec (1,000 images in 22s)</p>
+                            </div>
+
+                            <!-- ConvNeXt -->
+                            <div class="opacity-80">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>ConvNeXt-Tiny</span>
+                                    <span class="font-mono">0.051s</span>
+                                </div>
+                                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700">
+                                    <div class="bg-zinc-400 dark:bg-zinc-600 h-full chart-bar" style="width: 92%"></div>
+                                </div>
+                                <p class="text-xs text-zinc-500 mt-2">Throughput: ~20 images/sec</p>
+                            </div>
+
+                            <!-- ResNet -->
+                            <div class="opacity-60">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>ResNet-50</span>
+                                    <span class="font-mono">0.055s</span>
+                                </div>
+                                <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700">
+                                    <div class="bg-zinc-300 dark:bg-zinc-700 h-full chart-bar" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accuracy Table -->
+                    <div>
+                        <h3 class="font-mono font-bold text-xs uppercase text-zinc-400 mb-6 tracking-widest">Macro-Averaged Performance</h3>
+                        <div class="border border-zinc-200 dark:border-zinc-700">
+                            <div class="grid grid-cols-3 bg-zinc-100 dark:bg-zinc-900 p-3 font-mono text-xs font-bold border-b border-zinc-200 dark:border-zinc-700">
+                                <div>Model</div>
+                                <div class="text-center">Accuracy</div>
+                                <div class="text-right">F1-Score</div>
+                            </div>
+                            <div class="grid grid-cols-3 p-4 border-b border-zinc-100 dark:border-zinc-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                <div class="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">ConvNeXt <span class="text-xs">🎯</span></div>
+                                <div class="text-center font-mono text-emerald-700 dark:text-emerald-400 font-bold">99.88%</div>
+                                <div class="text-right font-mono text-emerald-700 dark:text-emerald-400">0.998</div>
+                            </div>
+                            <div class="grid grid-cols-3 p-4 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+                                <div class="font-bold">FastViT-T8</div>
+                                <div class="text-center font-mono">99.66%</div>
+                                <div class="text-right font-mono">0.996</div>
+                            </div>
+                            <div class="grid grid-cols-3 p-4 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-950/50">
+                                <div>ResNet-50</div>
+                                <div class="text-center font-mono">97.69%</div>
+                                <div class="text-right font-mono">0.976</div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-zinc-500 mt-4 italic">
+                            * The 0.22% difference between ConvNeXt and FastViT is marginal, potentially due to random seed variation (seed=42).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Perfect Classes List -->
+                <div class="mt-8">
+                    <h4 class="font-bold mb-4">Perfect Classification (F1 = 1.000)</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800">Bacterial Spot</span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800">Yellow Leaf Curl</span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800">Tomato Mosaic Virus</span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800">Healthy</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. Error Analysis -->
+            <section id="errors" class="reveal-on-scroll space-y-12 mb-24">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">05</span> 
+                    Detailed Error Analysis
+                </h2>
+
+                <div class="bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 p-8">
+                    <h3 class="font-bold text-lg mb-2">The "Early Blight" Challenge (200 Validation Samples)</h3>
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                        Early Blight was the most difficult class across all models. ResNet-50 failed significantly here (21 errors), while ConvNeXt-Tiny only missed 1.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center">
+                            <div class="text-xs uppercase font-mono text-zinc-400 mb-1">ResNet-50</div>
+                            <div class="text-3xl font-bold text-tomato-600">21 Errors</div>
+                            <div class="text-xs text-zinc-500 mt-1">F1: 0.895</div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center">
+                            <div class="text-xs uppercase font-mono text-zinc-400 mb-1">FastViT-T8</div>
+                            <div class="text-3xl font-bold text-yellow-500">5 Errors</div>
+                            <div class="text-xs text-zinc-500 mt-1">F1: 0.982</div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center shadow-sm">
+                            <div class="text-xs uppercase font-mono text-zinc-400 mb-1">ConvNeXt-Tiny</div>
+                            <div class="text-3xl font-bold text-emerald-500">1 Error</div>
+                            <div class="text-xs text-zinc-500 mt-1">F1: 0.997</div>
+                        </div>
+                    </div>
 
                     <div class="grid md:grid-cols-2 gap-8">
                         <div>
-                            <h3 class="font-bold text-lg mb-4">
-                                Agricultural Impact
-                            </h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 mb-4">
-                                Global tomato production exceeds
-                                <strong>180 million tons</strong> annually.
-                                However, foliar diseases like Bacterial Spot and
-                                Early Blight cause up to
-                                <strong>40% yield loss</strong>, threatening the
-                                livelihoods of smallholder farmers in South Asia
-                                and Africa.
+                            <h4 class="font-bold text-sm mb-2">Primary Confusion: Early Blight ↔ Late Blight</h4>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                Both diseases manifest as brown, irregular spots. Without high-resolution texture analysis, models struggle to distinguish the concentric rings of Early Blight from the water-soaked lesions of Late Blight.
                             </p>
-                            <p class="text-zinc-600 dark:text-zinc-400">
-                                Current detection methods are either too slow
-                                (expert visual inspection) or too expensive
-                                (laboratory testing), creating a critical need
-                                for automated, accessible solutions.
-                            </p>
-                        </div>
-                        <div
-                            class="bg-zinc-100 dark:bg-zinc-900 p-6 border border-zinc-200 dark:border-zinc-800"
-                        >
-                            <h3
-                                class="font-mono font-bold text-xs uppercase text-zinc-400 mb-4"
-                            >
-                                The "GPU Gap" in Prior Work
-                            </h3>
-                            <ul
-                                class="text-sm space-y-3 text-zinc-600 dark:text-zinc-300"
-                            >
-                                <li>
-                                    <strong
-                                        class="text-zinc-900 dark:text-white"
-                                        >DenseNet (2020):</strong
-                                    >
-                                    Used Tesla K80 GPU. No CPU benchmarks.
-                                </li>
-                                <li>
-                                    <strong
-                                        class="text-zinc-900 dark:text-white"
-                                        >TomatoDet (2024):</strong
-                                    >
-                                    Used Tesla T4. Acknowledged need for
-                                    lightweight models but didn't test them.
-                                </li>
-                                <li>
-                                    <strong
-                                        class="text-zinc-900 dark:text-white"
-                                        >Inception V3 (2023):</strong
-                                    >
-                                    Relied on RTX 3060 Ti.
-                                </li>
-                            </ul>
-                            <div
-                                class="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700"
-                            >
-                                <p class="text-xs font-bold text-tomato-600">
-                                    Our Contribution: First systematic
-                                    evaluation on consumer CPU (AMD Ryzen 5).
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 2. Methodology & Hardware -->
-                <section
-                    id="methodology"
-                    class="reveal-on-scroll space-y-12 mb-24"
-                >
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >02</span
-                        >
-                        Methodology & Setup
-                    </h2>
-
-                    <!-- Hardware Specs -->
-                    <div
-                        class="border border-zinc-200 dark:border-zinc-800 p-8 bg-zinc-50 dark:bg-zinc-900/50 hover-lift"
-                    >
-                        <h3
-                            class="font-mono font-bold text-lg mb-6 text-zinc-900 dark:text-white uppercase flex items-center gap-2"
-                        >
-                            Experimental Hardware (CPU-Only)
-                        </h3>
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <ul class="font-mono text-sm space-y-4">
-                                <li
-                                    class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2"
-                                >
-                                    <span class="text-zinc-500">Processor</span>
-                                    <span class="font-bold"
-                                        >AMD Ryzen 5 5600G</span
-                                    >
-                                </li>
-                                <li
-                                    class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2"
-                                >
-                                    <span class="text-zinc-500"
-                                        >Cores/Threads</span
-                                    >
-                                    <span class="font-bold"
-                                        >6 Cores / 12 Threads</span
-                                    >
-                                </li>
-                                <li
-                                    class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2"
-                                >
-                                    <span class="text-zinc-500">RAM</span>
-                                    <span class="font-bold"
-                                        >16 GB DDR4-3200</span
-                                    >
-                                </li>
-                                <li
-                                    class="flex justify-between border-b border-zinc-200 dark:border-zinc-700 pb-2"
-                                >
-                                    <span class="text-zinc-500"
-                                        >Accelerator</span
-                                    >
-                                    <span class="font-bold text-tomato-600"
-                                        >None (No GPU)</span
-                                    >
-                                </li>
-                            </ul>
-                            <div
-                                class="text-sm text-zinc-600 dark:text-zinc-400 italic flex items-center"
-                            >
-                                "Most farmers in developing regions use standard
-                                computers or mobile devices. GPU workstations
-                                ($2,000+) are inaccessible. We test on a ~$500
-                                setup to reflect reality."
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Model Architectures -->
-                    <div class="grid md:grid-cols-3 gap-6">
-                        <div
-                            class="border border-zinc-200 dark:border-zinc-800 p-6"
-                        >
-                            <div class="text-xs font-mono text-zinc-400 mb-2">
-                                BASELINE
-                            </div>
-                            <h4 class="font-bold text-lg mb-2">ResNet-50</h4>
-                            <p class="text-sm text-zinc-500 mb-4">
-                                Traditional CNN
-                            </p>
-                            <ul
-                                class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400"
-                            >
-                                <li>• Params: <strong>25.6 Million</strong></li>
-                                <li>• Deep residual layers</li>
-                                <li>• Identity shortcuts</li>
-                            </ul>
-                        </div>
-                        <div
-                            class="border border-zinc-200 dark:border-zinc-800 p-6 bg-zinc-50 dark:bg-zinc-900"
-                        >
-                            <div class="text-xs font-mono text-zinc-400 mb-2">
-                                MODERN CNN
-                            </div>
-                            <h4 class="font-bold text-lg mb-2">
-                                ConvNeXt-Tiny
-                            </h4>
-                            <p class="text-sm text-zinc-500 mb-4">
-                                Modernized Architecture
-                            </p>
-                            <ul
-                                class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400"
-                            >
-                                <li>• Params: <strong>29.0 Million</strong></li>
-                                <li>• Large kernels (7x7)</li>
-                                <li>• Transformer-like design</li>
-                            </ul>
-                        </div>
-                        <div class="border-2 border-tomato-500 p-6 relative">
-                            <div
-                                class="absolute top-0 right-0 bg-tomato-500 text-white text-[10px] px-2 py-1 font-bold"
-                            >
-                                HYBRID
-                            </div>
-                            <h4 class="font-bold text-lg mb-2">FastViT-T8</h4>
-                            <p class="text-sm text-zinc-500 mb-4">
-                                CNN + Transformer
-                            </p>
-                            <ul
-                                class="text-xs space-y-2 font-mono text-zinc-600 dark:text-zinc-400"
-                            >
-                                <li>
-                                    • Params:
-                                    <strong class="text-tomato-600"
-                                        >4.03 Million</strong
-                                    >
-                                </li>
-                                <li>• Global attention</li>
-                                <li>• Optimized for speed</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Training Protocol -->
-                    <div
-                        class="bg-zinc-50 dark:bg-zinc-900/30 p-8 border border-zinc-200 dark:border-zinc-800"
-                    >
-                        <h3 class="font-bold mb-4">
-                            Two-Phase Transfer Learning Protocol
-                        </h3>
-                        <div class="grid md:grid-cols-2 gap-8 text-sm">
-                            <div>
-                                <h4
-                                    class="font-mono font-bold text-tomato-600 mb-2"
-                                >
-                                    Phase 1: Feature Adaptation
-                                </h4>
-                                <ul
-                                    class="space-y-1 text-zinc-600 dark:text-zinc-400"
-                                >
-                                    <li>• <strong>Epochs:</strong> 0-4</li>
-                                    <li>
-                                        • <strong>Strategy:</strong> Frozen
-                                        Backbone
-                                    </li>
-                                    <li>
-                                        • <strong>LR:</strong> 1×10⁻⁴ (Cosine
-                                        Annealing)
-                                    </li>
-                                    <li>
-                                        • <strong>Goal:</strong> Adapt ImageNet
-                                        features
-                                    </li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4
-                                    class="font-mono font-bold text-tomato-600 mb-2"
-                                >
-                                    Phase 2: Full Fine-Tuning
-                                </h4>
-                                <ul
-                                    class="space-y-1 text-zinc-600 dark:text-zinc-400"
-                                >
-                                    <li>
-                                        • <strong>Epochs:</strong> 5-19 (Early
-                                        Stopping)
-                                    </li>
-                                    <li>
-                                        • <strong>Strategy:</strong> Unfreeze
-                                        All Layers
-                                    </li>
-                                    <li>
-                                        • <strong>LR:</strong> 5×10⁻⁵ (Reduced)
-                                    </li>
-                                    <li>
-                                        • <strong>Optimizer:</strong> AdamW
-                                        (Decay 1e-4)
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 3. Dataset Details -->
-                <section id="dataset" class="reveal-on-scroll space-y-12 mb-24">
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >03</span
-                        >
-                        Dataset Distribution
-                    </h2>
-
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2">
-                            <div
-                                class="overflow-hidden border border-zinc-200 dark:border-zinc-800"
-                            >
-                                <table
-                                    class="w-full text-sm text-left font-mono"
-                                >
-                                    <thead
-                                        class="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
-                                    >
-                                        <tr>
-                                            <th class="px-4 py-3">
-                                                Class Label
-                                            </th>
-                                            <th class="px-4 py-3 text-right">
-                                                Count
-                                            </th>
-                                            <th class="px-4 py-3 text-right">
-                                                %
-                                            </th>
-                                            <th
-                                                class="px-4 py-3 hidden sm:table-cell"
-                                            >
-                                                Bar
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody
-                                        class="divide-y divide-zinc-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950"
-                                    >
-                                        <tr>
-                                            <td class="px-4 py-2 font-bold">
-                                                Yellow Leaf Curl Virus
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                3,209
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                20.0%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-tomato-500 w-full"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Bacterial Spot
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                2,127
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                13.3%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[66%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Late Blight
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,909
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                11.9%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[59%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Septoria Leaf Spot
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,771
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                11.1%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[55%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Two-spotted Spider Mites
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,676
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                10.5%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[52%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">Healthy</td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,591
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                9.9%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[49%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Target Spot
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,404
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                8.8%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[43%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">
-                                                Early Blight
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                1,000
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                6.2%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[31%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-4 py-2">Leaf Mold</td>
-                                            <td class="px-4 py-2 text-right">
-                                                952
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                5.9%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-zinc-400 w-[29%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr
-                                            class="bg-tomato-50 dark:bg-tomato-900/20 text-tomato-700 dark:text-tomato-400"
-                                        >
-                                            <td class="px-4 py-2 font-bold">
-                                                Tomato Mosaic Virus
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 text-right font-bold"
-                                            >
-                                                373
-                                            </td>
-                                            <td class="px-4 py-2 text-right">
-                                                2.3%
-                                            </td>
-                                            <td
-                                                class="px-4 py-2 hidden sm:table-cell"
-                                            >
-                                                <div
-                                                    class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800"
-                                                >
-                                                    <div
-                                                        class="h-full bg-tomato-500 w-[11%]"
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
                         <div>
-                            <div class="p-6 bg-zinc-100 dark:bg-zinc-900 mb-6">
-                                <h4 class="font-bold mb-2">
-                                    Imbalance Ratio: 8.6:1
-                                </h4>
-                                <p
-                                    class="text-sm text-zinc-600 dark:text-zinc-400"
-                                >
-                                    The dataset is heavily skewed. To combat
-                                    this, we used
-                                    <strong>Weighted Metrics</strong> (F1,
-                                    Precision, Recall) and aggressive Data
-                                    Augmentation (Random Resized Crop,
-                                    Horizontal Flip).
-                                </p>
-                            </div>
-                            <div
-                                class="p-6 border border-zinc-200 dark:border-zinc-800"
-                            >
-                                <h4 class="font-bold mb-2">Preprocessing</h4>
-                                <ul
-                                    class="text-sm space-y-2 text-zinc-600 dark:text-zinc-400"
-                                >
-                                    <li>
-                                        • <strong>Input:</strong> Resized to
-                                        model dim.
-                                    </li>
-                                    <li>
-                                        • <strong>Norm:</strong> ImageNet
-                                        Mean/Std.
-                                    </li>
-                                    <li>
-                                        • <strong>Validation:</strong> Fixed
-                                        center crop.
-                                    </li>
-                                    <li>
-                                        • <strong>Augmentation:</strong> Flip
-                                        (50%), Random Crop.
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- 4. Results -->
-                <section id="results" class="reveal-on-scroll space-y-12 mb-24">
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >04</span
-                        >
-                        Results & Benchmarks
-                    </h2>
-
-                    <div class="grid lg:grid-cols-2 gap-12">
-                        <!-- Speed Chart -->
-                        <div>
-                            <h3
-                                class="font-mono font-bold text-xs uppercase text-zinc-400 mb-6 tracking-widest"
-                            >
-                                Inference Latency (Avg over 3,202 images)
-                            </h3>
-                            <div class="space-y-8">
-                                <!-- FastViT -->
-                                <div class="group">
-                                    <div
-                                        class="flex justify-between text-sm mb-2"
-                                    >
-                                        <span
-                                            class="font-bold flex items-center gap-2"
-                                        >
-                                            FastViT-T8
-                                            <span
-                                                class="bg-yellow-400 text-black text-[10px] px-1.5 py-0.5 font-bold uppercase"
-                                                >Fastest</span
-                                            >
-                                        </span>
-                                        <span
-                                            class="font-mono text-tomato-600 font-bold"
-                                            >0.022s</span
-                                        >
-                                    </div>
-                                    <div
-                                        class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700 relative overflow-hidden"
-                                    >
-                                        <div
-                                            class="absolute top-0 left-0 h-full bg-tomato-500 chart-bar transition-all duration-1000 ease-out"
-                                            style="width: 40%"
-                                        ></div>
-                                    </div>
-                                    <p class="text-xs text-zinc-500 mt-2">
-                                        Throughput: ~45 images/sec (1,000 images
-                                        in 22s)
-                                    </p>
-                                </div>
-
-                                <!-- ConvNeXt -->
-                                <div class="opacity-80">
-                                    <div
-                                        class="flex justify-between text-sm mb-2"
-                                    >
-                                        <span>ConvNeXt-Tiny</span>
-                                        <span class="font-mono">0.051s</span>
-                                    </div>
-                                    <div
-                                        class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700"
-                                    >
-                                        <div
-                                            class="bg-zinc-400 dark:bg-zinc-600 h-full chart-bar"
-                                            style="width: 92%"
-                                        ></div>
-                                    </div>
-                                    <p class="text-xs text-zinc-500 mt-2">
-                                        Throughput: ~20 images/sec
-                                    </p>
-                                </div>
-
-                                <!-- ResNet -->
-                                <div class="opacity-60">
-                                    <div
-                                        class="flex justify-between text-sm mb-2"
-                                    >
-                                        <span>ResNet-50</span>
-                                        <span class="font-mono">0.055s</span>
-                                    </div>
-                                    <div
-                                        class="w-full bg-zinc-100 dark:bg-zinc-800 h-8 border border-zinc-200 dark:border-zinc-700"
-                                    >
-                                        <div
-                                            class="bg-zinc-300 dark:bg-zinc-700 h-full chart-bar"
-                                            style="width: 100%"
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Accuracy Table -->
-                        <div>
-                            <h3
-                                class="font-mono font-bold text-xs uppercase text-zinc-400 mb-6 tracking-widest"
-                            >
-                                Macro-Averaged Performance
-                            </h3>
-                            <div
-                                class="border border-zinc-200 dark:border-zinc-700"
-                            >
-                                <div
-                                    class="grid grid-cols-3 bg-zinc-100 dark:bg-zinc-900 p-3 font-mono text-xs font-bold border-b border-zinc-200 dark:border-zinc-700"
-                                >
-                                    <div>Model</div>
-                                    <div class="text-center">Accuracy</div>
-                                    <div class="text-right">F1-Score</div>
-                                </div>
-                                <div
-                                    class="grid grid-cols-3 p-4 border-b border-zinc-100 dark:border-zinc-800 bg-emerald-50/50 dark:bg-emerald-900/10"
-                                >
-                                    <div
-                                        class="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2"
-                                    >
-                                        ConvNeXt <span class="text-xs">🎯</span>
-                                    </div>
-                                    <div
-                                        class="text-center font-mono text-emerald-700 dark:text-emerald-400 font-bold"
-                                    >
-                                        99.88%
-                                    </div>
-                                    <div
-                                        class="text-right font-mono text-emerald-700 dark:text-emerald-400"
-                                    >
-                                        0.998
-                                    </div>
-                                </div>
-                                <div
-                                    class="grid grid-cols-3 p-4 border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
-                                >
-                                    <div class="font-bold">FastViT-T8</div>
-                                    <div class="text-center font-mono">
-                                        99.66%
-                                    </div>
-                                    <div class="text-right font-mono">
-                                        0.996
-                                    </div>
-                                </div>
-                                <div
-                                    class="grid grid-cols-3 p-4 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-950/50"
-                                >
-                                    <div>ResNet-50</div>
-                                    <div class="text-center font-mono">
-                                        97.69%
-                                    </div>
-                                    <div class="text-right font-mono">
-                                        0.976
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="text-xs text-zinc-500 mt-4 italic">
-                                * The 0.22% difference between ConvNeXt and
-                                FastViT is marginal, potentially due to random
-                                seed variation (seed=42).
+                            <h4 class="font-bold text-sm mb-2">Secondary Confusion: Target Spot ↔ Septoria</h4>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                ResNet-50 frequently confused Target Spot with Septoria Leaf Spot due to overlapping visual features (small circular lesions). Modern architectures with better spatial context handled this much better.
                             </p>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    <!-- Perfect Classes List -->
-                    <div class="mt-8">
-                        <h4 class="font-bold mb-4">
-                            Perfect Classification (F1 = 1.000)
-                        </h4>
-                        <div class="flex flex-wrap gap-2">
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800"
-                                >Bacterial Spot</span
-                            >
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800"
-                                >Yellow Leaf Curl</span
-                            >
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800"
-                                >Tomato Mosaic Virus</span
-                            >
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase rounded-none border border-green-200 dark:border-green-800"
-                                >Healthy</span
-                            >
-                        </div>
-                    </div>
-                </section>
+            <!-- 6. Impact & Future -->
+            <section id="impact" class="reveal-on-scroll space-y-12">
+                <h2 class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <span class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1">06</span> 
+                    Impact & Future Directions
+                </h2>
 
-                <!-- 5. Error Analysis -->
-                <section id="errors" class="reveal-on-scroll space-y-12 mb-24">
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >05</span
-                        >
-                        Detailed Error Analysis
-                    </h2>
-
-                    <div
-                        class="bg-zinc-50 dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 p-8"
-                    >
-                        <h3 class="font-bold text-lg mb-2">
-                            The "Early Blight" Challenge (200 Validation
-                            Samples)
-                        </h3>
-                        <p
-                            class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"
-                        >
-                            Early Blight was the most difficult class across all
-                            models. ResNet-50 failed significantly here (21
-                            errors), while ConvNeXt-Tiny only missed 1.
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Deployment Recommendation -->
+                    <div class="hover-lift border-2 border-tomato-500 p-8 flex flex-col bg-white dark:bg-zinc-900 relative">
+                        <div class="absolute -top-3 right-8 bg-tomato-500 text-white text-[10px] font-bold px-3 py-1 uppercase tracking-wider shadow-sm">Recommended</div>
+                        <h3 class="font-bold text-xl mb-4 text-zinc-900 dark:text-white">FastViT-T8</h3>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                            For real-world agricultural deployment in developing regions, <strong>FastViT-T8</strong> is the superior choice.
                         </p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div
-                                class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center"
-                            >
-                                <div
-                                    class="text-xs uppercase font-mono text-zinc-400 mb-1"
-                                >
-                                    ResNet-50
-                                </div>
-                                <div class="text-3xl font-bold text-tomato-600">
-                                    21 Errors
-                                </div>
-                                <div class="text-xs text-zinc-500 mt-1">
-                                    F1: 0.895
-                                </div>
-                            </div>
-                            <div
-                                class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center"
-                            >
-                                <div
-                                    class="text-xs uppercase font-mono text-zinc-400 mb-1"
-                                >
-                                    FastViT-T8
-                                </div>
-                                <div class="text-3xl font-bold text-yellow-500">
-                                    5 Errors
-                                </div>
-                                <div class="text-xs text-zinc-500 mt-1">
-                                    F1: 0.982
-                                </div>
-                            </div>
-                            <div
-                                class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-center shadow-sm"
-                            >
-                                <div
-                                    class="text-xs uppercase font-mono text-zinc-400 mb-1"
-                                >
-                                    ConvNeXt-Tiny
-                                </div>
-                                <div
-                                    class="text-3xl font-bold text-emerald-500"
-                                >
-                                    1 Error
-                                </div>
-                                <div class="text-xs text-zinc-500 mt-1">
-                                    F1: 0.997
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <h4 class="font-bold text-sm mb-2">
-                                    Primary Confusion: Early Blight ↔ Late
-                                    Blight
-                                </h4>
-                                <p
-                                    class="text-sm text-zinc-600 dark:text-zinc-400"
-                                >
-                                    Both diseases manifest as brown, irregular
-                                    spots. Without high-resolution texture
-                                    analysis, models struggle to distinguish the
-                                    concentric rings of Early Blight from the
-                                    water-soaked lesions of Late Blight.
-                                </p>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm mb-2">
-                                    Secondary Confusion: Target Spot ↔ Septoria
-                                </h4>
-                                <p
-                                    class="text-sm text-zinc-600 dark:text-zinc-400"
-                                >
-                                    ResNet-50 frequently confused Target Spot
-                                    with Septoria Leaf Spot due to overlapping
-                                    visual features (small circular lesions).
-                                    Modern architectures with better spatial
-                                    context handled this much better.
-                                </p>
-                            </div>
-                        </div>
+                        <ul class="text-sm space-y-3 mb-6 flex-1 text-zinc-600 dark:text-zinc-300">
+                            <li class="flex items-start"><span class="mr-3 text-tomato-500">⚡</span> <strong>Speed:</strong> 57% faster than ConvNeXt.</li>
+                            <li class="flex items-start"><span class="mr-3 text-tomato-500">📉</span> <strong>Size:</strong> Only 4M params vs 29M.</li>
+                            <li class="flex items-start"><span class="mr-3 text-tomato-500">✅</span> <strong>Accuracy:</strong> 99.66% is sufficient.</li>
+                        </ul>
                     </div>
-                </section>
-
-                <!-- 6. Impact & Future -->
-                <section id="impact" class="reveal-on-scroll space-y-12">
-                    <h2
-                        class="text-2xl font-bold font-serif text-zinc-900 dark:text-zinc-100 flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4"
-                    >
-                        <span
-                            class="font-mono text-tomato-600 text-sm border border-tomato-600 px-2 py-1"
-                            >06</span
-                        >
-                        Impact & Future Directions
-                    </h2>
-
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <!-- Deployment Recommendation -->
-                        <div
-                            class="hover-lift border-2 border-tomato-500 p-8 flex flex-col bg-white dark:bg-zinc-900 relative"
-                        >
-                            <div
-                                class="absolute -top-3 right-8 bg-tomato-500 text-white text-[10px] font-bold px-3 py-1 uppercase tracking-wider shadow-sm"
-                            >
-                                Recommended
-                            </div>
-                            <h3
-                                class="font-bold text-xl mb-4 text-zinc-900 dark:text-white"
-                            >
-                                FastViT-T8
-                            </h3>
-                            <p
-                                class="text-sm text-zinc-600 dark:text-zinc-400 mb-6"
-                            >
-                                For real-world agricultural deployment in
-                                developing regions,
-                                <strong>FastViT-T8</strong> is the superior
-                                choice.
-                            </p>
-                            <ul
-                                class="text-sm space-y-3 mb-6 flex-1 text-zinc-600 dark:text-zinc-300"
-                            >
-                                <li class="flex items-start">
-                                    <span class="mr-3 text-tomato-500">⚡</span>
-                                    <strong>Speed:</strong> 57% faster than
-                                    ConvNeXt.
-                                </li>
-                                <li class="flex items-start">
-                                    <span class="mr-3 text-tomato-500">📉</span>
-                                    <strong>Size:</strong> Only 4M params vs
-                                    29M.
-                                </li>
-                                <li class="flex items-start">
-                                    <span class="mr-3 text-tomato-500">✅</span>
-                                    <strong>Accuracy:</strong> 99.66% is
-                                    sufficient.
-                                </li>
+                    
+                    <!-- Limitations & Future -->
+                    <div class="space-y-6">
+                        <div class="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600 p-6">
+                            <h3 class="font-bold text-amber-900 dark:text-amber-500 uppercase tracking-widest mb-3 text-xs">Critical Limitations</h3>
+                            <ul class="space-y-2 text-sm text-amber-900/80 dark:text-amber-200/80 font-mono">
+                                <li>• <strong>Single Seed:</strong> Results need multi-seed validation.</li>
+                                <li>• <strong>Data Leakage:</strong> Same-plant images likely in train/val.</li>
+                                <li>• <strong>Field Gap:</strong> Lab images do not reflect field lighting/backgrounds.</li>
                             </ul>
                         </div>
-
-                        <!-- Limitations & Future -->
-                        <div class="space-y-6">
-                            <div
-                                class="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600 p-6"
-                            >
-                                <h3
-                                    class="font-bold text-amber-900 dark:text-amber-500 uppercase tracking-widest mb-3 text-xs"
-                                >
-                                    Critical Limitations
-                                </h3>
-                                <ul
-                                    class="space-y-2 text-sm text-amber-900/80 dark:text-amber-200/80 font-mono"
-                                >
-                                    <li>
-                                        • <strong>Single Seed:</strong> Results
-                                        need multi-seed validation.
-                                    </li>
-                                    <li>
-                                        •
-                                        <strong>Data Leakage:</strong>
-                                        Same-plant images likely in train/val.
-                                    </li>
-                                    <li>
-                                        • <strong>Field Gap:</strong> Lab images
-                                        do not reflect field
-                                        lighting/backgrounds.
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div
-                                class="border border-zinc-200 dark:border-zinc-800 p-6"
-                            >
-                                <h3 class="font-bold mb-3 text-sm uppercase">
-                                    Future Work
-                                </h3>
-                                <ul
-                                    class="list-disc list-inside text-sm text-zinc-600 dark:text-zinc-400 space-y-2"
-                                >
-                                    <li>
-                                        <strong>Plant-Level Splitting:</strong>
-                                        Eliminate data leakage.
-                                    </li>
-                                    <li>
-                                        <strong>Field Testing:</strong> Validate
-                                        on real farm images.
-                                    </li>
-                                    <li>
-                                        <strong>Edge Deployment:</strong> Test
-                                        quantization for mobile apps.
-                                    </li>
-                                </ul>
-                            </div>
+                        
+                        <div class="border border-zinc-200 dark:border-zinc-800 p-6">
+                            <h3 class="font-bold mb-3 text-sm uppercase">Future Work</h3>
+                            <ul class="list-disc list-inside text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
+                                <li><strong>Plant-Level Splitting:</strong> Eliminate data leakage.</li>
+                                <li><strong>Field Testing:</strong> Validate on real farm images.</li>
+                                <li><strong>Edge Deployment:</strong> Test quantization for mobile apps.</li>
+                            </ul>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- Footer -->
-                <footer
-                    class="border-t border-zinc-200 dark:border-zinc-800 pt-20 pb-10 mt-24"
-                >
-                    <div
-                        class="flex flex-col md:flex-row justify-between items-end gap-8"
-                    >
-                        <div class="max-w-md">
-                            <h2
-                                class="text-xs font-bold font-mono text-zinc-400 uppercase tracking-widest mb-4"
-                            >
-                                References
-                            </h2>
-                            <div
-                                class="text-xs text-zinc-500 dark:text-zinc-600 space-y-2 font-mono break-all"
-                            >
-                                <p>
-                                    [1] Gebbers, R., Adamchuk, V.I.: Precision
-                                    Agriculture. Science (2010).
-                                </p>
-                                <p>
-                                    [2] Too, E.C., et al.: Fine-tuning deep
-                                    learning models. (2019).
-                                </p>
-                                <p>
-                                    [3] PlantVillage Dataset (Hughes & Salathe,
-                                    2016).
-                                </p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="mb-2">
-                                <p
-                                    class="text-zinc-900 dark:text-white font-serif font-bold italic text-lg"
-                                >
-                                    "Bridging the GPU-CPU gap."
-                                </p>
-                            </div>
-                            <p class="text-xs text-zinc-400 font-mono mb-1">
-                                Created & Designed by
-                            </p>
-                            <a
-                                href="#"
-                                class="text-sm font-bold text-tomato-600 dark:text-tomato-500 hover:underline"
-                                >Obidur Rahman</a
-                            >
-                            <p
-                                class="text-xs text-zinc-300 dark:text-zinc-700 mt-2"
-                            >
-                                © 2025 Dept. of Mathematics, CU
-                            </p>
+            <!-- Footer -->
+            <footer class="border-t border-zinc-200 dark:border-zinc-800 pt-20 pb-10 mt-24">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-8">
+                    <div class="max-w-md">
+                        <h2 class="text-xs font-bold font-mono text-zinc-400 uppercase tracking-widest mb-4">References</h2>
+                        <div class="text-xs text-zinc-500 dark:text-zinc-600 space-y-2 font-mono break-all">
+                            <p>[1] Gebbers, R., Adamchuk, V.I.: Precision Agriculture. Science (2010).</p>
+                            <p>[2] Too, E.C., et al.: Fine-tuning deep learning models. (2019).</p>
+                            <p>[3] PlantVillage Dataset (Hughes & Salathe, 2016).</p>
                         </div>
                     </div>
-                </footer>
-            </main>
-        </div>
+                    <div class="text-right">
+                         <div class="mb-2">
+                            <p class="text-zinc-900 dark:text-white font-serif font-bold italic text-lg">"Bridging the GPU-CPU gap."</p>
+                        </div>
+                        <p class="text-xs text-zinc-400 font-mono mb-1">Created & Designed by</p>
+                        <a href="https://github.com/ashfinnn/efficient-leaf-disease" target="_blank" class="text-sm font-bold text-tomato-600 dark:text-tomato-500 hover:underline">Obidur Rahman</a>
+                        <p class="text-xs text-zinc-300 dark:text-zinc-700 mt-2">© 2025 Dept. of Mathematics, CU</p>
+                    </div>
+                </div>
+            </footer>
 
-        <!-- Logic -->
-        <script>
-            // Author Tag Styling
-            document.querySelectorAll(".author-tag").forEach((el) => {
-                el.className =
-                    "border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-default";
-            });
+        </main>
+    </div>
 
-            // Theme Logic
-            const themeToggleBtn = document.getElementById("theme-toggle");
-            if (
-                localStorage.getItem("color-theme") === "dark" ||
-                (!("color-theme" in localStorage) &&
-                    window.matchMedia("(prefers-color-scheme: dark)").matches)
-            ) {
-                document.documentElement.classList.add("dark");
+    <!-- Logic -->
+    <script>
+        // Author Tag Styling
+        document.querySelectorAll('.author-tag').forEach(el => {
+            el.className = 'border border-zinc-200 dark:border-zinc-800 px-3 py-2 bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-default';
+        });
+
+        // Theme Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('color-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Mobile Menu
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        let isMenuOpen = false;
+
+        menuBtn.addEventListener('click', () => {
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex', 'fixed', 'inset-0', 'z-50', 'bg-white', 'dark:bg-zinc-950');
+                menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex', 'fixed', 'inset-0', 'z-50', 'bg-white', 'dark:bg-zinc-950');
+                if (window.innerWidth >= 1024) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('flex');
+                }
+                menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>';
             }
-            themeToggleBtn.addEventListener("click", function () {
-                document.documentElement.classList.toggle("dark");
-                localStorage.setItem(
-                    "color-theme",
-                    document.documentElement.classList.contains("dark")
-                        ? "dark"
-                        : "light",
-                );
-            });
+        });
 
-            // Mobile Menu
-            const menuBtn = document.getElementById("menu-btn");
-            const sidebar = document.getElementById("sidebar");
-            let isMenuOpen = false;
+        // Scroll Progress
+        const progressBar = document.getElementById('progress-bar');
+        window.addEventListener('scroll', () => {
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (window.scrollY / height) * 100;
+            progressBar.style.width = scrolled + "%";
+        });
 
-            menuBtn.addEventListener("click", () => {
-                isMenuOpen = !isMenuOpen;
-                if (isMenuOpen) {
-                    sidebar.classList.remove("hidden");
-                    sidebar.classList.add(
-                        "flex",
-                        "fixed",
-                        "inset-0",
-                        "z-50",
-                        "bg-white",
-                        "dark:bg-zinc-950",
-                    );
-                    menuBtn.innerHTML =
-                        '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
-                } else {
-                    sidebar.classList.add("hidden");
-                    sidebar.classList.remove(
-                        "flex",
-                        "fixed",
-                        "inset-0",
-                        "z-50",
-                        "bg-white",
-                        "dark:bg-zinc-950",
-                    );
-                    if (window.innerWidth >= 1024) {
-                        sidebar.classList.remove("hidden");
-                        sidebar.classList.add("flex");
+        // Scroll Animation Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    // Trigger charts
+                    if(entry.target.querySelector('.chart-bar')) {
+                        entry.target.querySelectorAll('.chart-bar').forEach(bar => {
+                            bar.style.width = bar.parentElement.querySelector('.chart-bar').getAttribute('style').split(':')[1];
+                        });
                     }
-                    menuBtn.innerHTML =
-                        '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>';
                 }
             });
+        }, { 
+            // Triggers when element is 10% visible (much earlier)
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        });
 
-            // Scroll Progress
-            const progressBar = document.getElementById("progress-bar");
-            window.addEventListener("scroll", () => {
-                const height =
-                    document.documentElement.scrollHeight -
-                    document.documentElement.clientHeight;
-                const scrolled = (window.scrollY / height) * 100;
-                progressBar.style.width = scrolled + "%";
-            });
-
-            // Scroll Animation Observer
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add("is-visible");
-                            // Trigger charts
-                            if (entry.target.querySelector(".chart-bar")) {
-                                entry.target
-                                    .querySelectorAll(".chart-bar")
-                                    .forEach((bar) => {
-                                        bar.style.width = bar.parentElement
-                                            .querySelector(".chart-bar")
-                                            .getAttribute("style")
-                                            .split(":")[1];
-                                    });
-                            }
-                        }
-                    });
-                },
-                {
-                    // Triggers when element is 10% visible (much earlier)
-                    threshold: 0.1,
-                    rootMargin: "0px 0px -50px 0px",
-                },
-            );
-
-            document
-                .querySelectorAll(".reveal-on-scroll")
-                .forEach((section) => observer.observe(section));
-        </script>
-    </body>
+        document.querySelectorAll('.reveal-on-scroll').forEach((section) => observer.observe(section));
+    </script>
+</body>
 </html>
